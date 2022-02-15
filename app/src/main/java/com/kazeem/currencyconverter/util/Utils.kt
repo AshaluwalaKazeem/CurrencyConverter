@@ -1,6 +1,17 @@
 package com.kazeem.currencyconverter.util
 
-const val latestEndpointData = """
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.widget.Toast
+
+class Utils {
+    companion object {
+        const val baseUrl = "http://data.fixer.io/api/"
+        const val accessKey = "0869a55d67051f97019ecdeda328a705"
+        const val latestEndpointData = """
     {
   "success":true,
   "timestamp":1644882962,
@@ -178,3 +189,59 @@ const val latestEndpointData = """
   }
 }
 """
+
+
+
+
+        /**
+         * This method is used to get the connection of a device
+         * @param context Application context
+         * @return It returns an int
+        0: No Internet available (maybe on airplane mode, or in the process of joining an wi-fi).
+
+        1: Cellular (mobile data, 3G/4G/LTE whatever).
+
+        2: Wi-fi.
+
+        3: VPN
+         */
+        private fun getConnectionType(context: Context): Int {
+            var result = 0 // Returns connection type. 0: none; 1: mobile data; 2: wifi
+            val cm = context
+                .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+            cm?.run {
+                cm.getNetworkCapabilities(cm.activeNetwork)?.run {
+                    when {
+                        hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                            result = 2
+                        }
+                        hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                            result = 1
+                        }
+                        hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> {
+                            result = 3
+                        }
+                    }
+                }
+            }
+            return result
+        }
+
+        internal fun isInternetConnected(context: Context): Boolean {
+            return getConnectionType(context) != 0
+        }
+
+        /**
+         * This method is used to copy text to clipboard
+         * @param context The application
+         * @param text The text that that you want to copy to clipboard
+         * @param message The message that you want to display after the text has been copied to clipboard
+         */
+        fun copyTextToClipboard(context : Context, text : String, message: String){
+            val clipboard: ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("label", text)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+}

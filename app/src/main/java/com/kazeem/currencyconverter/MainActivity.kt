@@ -3,7 +3,9 @@ package com.kazeem.currencyconverter
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -46,6 +48,7 @@ import kotlinx.coroutines.launch
 
 @ExperimentalUnitApi
 @ExperimentalMaterialApi
+@ExperimentalFoundationApi
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: MainActivityViewModel
@@ -81,6 +84,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@ExperimentalFoundationApi
 @ExperimentalUnitApi
 @ExperimentalMaterialApi
 @Composable
@@ -94,26 +98,31 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
     }
     Scaffold() {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
-                    .padding(top = 10.dp, bottom = 10.dp, end = 15.dp, start = 5.dp)
-                    .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
-            ) { // TopAppBar
-                IconButton(onClick = {
-                    Toast.makeText(
-                        context,
-                        "Not part of the assignment task",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_menu),
-                        contentDescription = "Menu Button",
-                        tint = Green500,
-                        modifier = Modifier.size(24.dp)
-                    )
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                if(viewModel.isLoading.value) CircularProgressIndicator(
+                    strokeWidth = 1.dp
+                )
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
+                        .padding(top = 10.dp, bottom = 10.dp, end = 15.dp, start = 5.dp)
+                        .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+                ) { // TopAppBar
+                    IconButton(onClick = {
+                        Toast.makeText(
+                            context,
+                            "Not part of the assignment task",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_menu),
+                            contentDescription = "Menu Button",
+                            tint = Green500,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Text(text = "Sign up", color = Green500, style = MaterialTheme.typography.h3)
                 }
-                Text(text = "Sign up", color = Green500, style = MaterialTheme.typography.h3)
             }
 
             LazyColumn(
@@ -142,7 +151,9 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                                     append(".")
                                 }
                             },
-                            modifier = Modifier.padding(vertical = 25.dp, horizontal = 15.dp).fillMaxWidth()
+                            modifier = Modifier
+                                .padding(vertical = 25.dp, horizontal = 15.dp)
+                                .fillMaxWidth()
                         ) // Currency Calculator.
                         CurrencyInputView(
                             textInput = viewModel.baseCurrencyValue,
@@ -150,7 +161,8 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                         ) // Input layout for base currency
                         CurrencyInputView(
                             textInput = viewModel.targetCurrencyValue,
-                            currency = viewModel.selectedTargetCurrency
+                            currency = viewModel.selectedTargetCurrency,
+                            enabled = false
                         ) // Input layout for target currency
                         Row(
                             modifier = Modifier
@@ -170,7 +182,14 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                                     }
                                 }
                             )
-                            IconButton(onClick = { /*TODO*/ }) {
+                            IconButton(onClick = {
+                                val baseCurrency = viewModel.selectedBaseCurrency.value
+                                viewModel.selectedBaseCurrency.value = viewModel.selectedTargetCurrency.value
+                                viewModel.selectedTargetCurrency.value = baseCurrency
+                                if(viewModel.baseCurrencyValue.value.matches("-?\\d+(\\.\\d+)?".toRegex())){
+                                    viewModel.convertCurrency(context)
+                                }
+                            }) {
                                 Icon(
                                     imageVector = Icons.Rounded.SwapHoriz,
                                     contentDescription = "Swap base currency to target currency"
@@ -189,7 +208,14 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                             )
                         } // Select base or target currency
                         Button(
-                            onClick = { /*TODO*/ },
+                            onClick = {
+                                if(viewModel.baseCurrencyValue.value.matches("-?\\d+(\\.\\d+)?".toRegex())){
+                                    viewModel.convertCurrency(context)
+                                } else {
+                                    Toast.makeText(context, "Please enter a valid number", Toast.LENGTH_LONG).show()
+                                }
+
+                          },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 15.dp, vertical = 15.dp)
@@ -198,7 +224,11 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                         }
 
                         TextButton(
-                            onClick = { /*TODO*/ },
+                            onClick = { Toast.makeText(
+                                context,
+                                "Not part of the assignment task",
+                                Toast.LENGTH_LONG
+                            ).show() },
                             modifier = Modifier.padding(start = 15.dp, end = 15.dp, bottom = 10.dp)
                         ) {
                             Text(text = "Mid-market as exchange rate at 13:38 UTC", textDecoration = TextDecoration.Underline, color = Blue500)
@@ -208,6 +238,11 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                     }
                 }
             }
+        }
+    }
+    BackHandler(currencyPickerSheetState.isVisible) {
+        coroutine.launch {
+            currencyPickerSheetState.hide()
         }
     }
     CurrencyPickerDialog(currencyPickerSheetState, viewModel = viewModel, selectedButton = selectedButton, )

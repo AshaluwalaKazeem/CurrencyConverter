@@ -1,9 +1,7 @@
 package com.kazeem.currencyconverter.ui.custom
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import android.widget.Toast
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +35,7 @@ import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.kazeem.currencyconverter.model.CurrencyData
 import com.kazeem.currencyconverter.ui.theme.*
+import com.kazeem.currencyconverter.util.Utils
 import com.kazeem.currencyconverter.viewModel.MainActivityViewModel
 import kotlinx.coroutines.launch
 
@@ -44,23 +44,36 @@ import kotlinx.coroutines.launch
 /**
  * Simple custom view for currency input
  */
+@ExperimentalFoundationApi
 @ExperimentalUnitApi
 @Composable
-fun CurrencyInputView(textInput: MutableState<String>, currency: MutableState<CurrencyData>) {
+fun CurrencyInputView(
+    textInput: MutableState<String>, currency: MutableState<CurrencyData>,
+    enabled: Boolean = true
+) {
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp, vertical = 5.dp)
             .clip(MaterialTheme.shapes.small)
-            .background(color = Gray100, shape = MaterialTheme.shapes.small),
+            .background(color = Gray100, shape = MaterialTheme.shapes.small)
+            .combinedClickable(
+                onClick = {
+
+                },
+                onLongClick = {
+                    if(textInput.value.isNotEmpty()) Utils.copyTextToClipboard(context = context, textInput.value, "Text copied to clipboard")
+                }
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         BasicTextField(
             value = textInput.value.toString(),
             onValueChange = {
-                if (it.length < 15) textInput.value = it
+                if (it.length < 20) textInput.value = it
             },
             modifier = Modifier
                 .weight(1F)
@@ -80,6 +93,7 @@ fun CurrencyInputView(textInput: MutableState<String>, currency: MutableState<Cu
                 }
             ),
             singleLine = true,
+            enabled = enabled
         )
 
         Text(
@@ -152,6 +166,7 @@ fun CurrencyPickerDialog(
     viewModel: MainActivityViewModel
 ) {
     val coroutine = rememberCoroutineScope()
+    val context = LocalContext.current
     ModalBottomSheetLayout(
         sheetState = currencyPickerSheetState,
         modifier = Modifier.fillMaxWidth(),
@@ -171,12 +186,26 @@ fun CurrencyPickerDialog(
                             .clickable {
                                 coroutine.launch {
                                     if (selectedButton.value == 0) {
+                                        if(viewModel.selectedTargetCurrency.value.currency == currencyData.currency) {
+                                            viewModel.selectedTargetCurrency.value = CurrencyData(
+                                                currency = viewModel.selectedBaseCurrency.value.currency,
+                                                flag = viewModel.selectedBaseCurrency.value.flag,
+                                                name = viewModel.selectedBaseCurrency.value.name
+                                            )
+                                        }
                                         viewModel.selectedBaseCurrency.value = CurrencyData(
                                             currency = currencyData.currency,
                                             flag = currencyData.flag,
                                             name = currencyData.name
                                         )
                                     } else {
+                                        if(viewModel.selectedBaseCurrency.value.currency == currencyData.currency) {
+                                            viewModel.selectedBaseCurrency.value = CurrencyData(
+                                                currency = viewModel.selectedTargetCurrency.value.currency,
+                                                flag = viewModel.selectedTargetCurrency.value.flag,
+                                                name = viewModel.selectedTargetCurrency.value.name
+                                            )
+                                        }
                                         viewModel.selectedTargetCurrency.value = CurrencyData(
                                             currency = currencyData.currency,
                                             flag = currencyData.flag,
@@ -184,6 +213,9 @@ fun CurrencyPickerDialog(
                                         )
                                     }
                                     currencyPickerSheetState.hide()
+                                    if(viewModel.baseCurrencyValue.value.matches("-?\\d+(\\.\\d+)?".toRegex())){
+                                        viewModel.convertCurrency(context)
+                                    }
                                 }
                             },
                         verticalAlignment = Alignment.CenterVertically,

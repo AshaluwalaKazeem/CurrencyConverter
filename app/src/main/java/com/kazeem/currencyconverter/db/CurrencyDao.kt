@@ -1,14 +1,12 @@
 package com.kazeem.currencyconverter.db
 
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 
+@Dao
 interface CurrencyDao {
 
-    @Query("SELECT * FROM latestcurrencydata LIMIT 1")
-    fun getLatestCurrencyExchange(): LatestCurrencyData
+    @Query("SELECT * FROM latestcurrencydata")
+    fun getLatestCurrencyExchange(): List<LatestCurrencyData>
 
     @Insert
     suspend fun insertNewCurrencyExchange(noteData: LatestCurrencyData)
