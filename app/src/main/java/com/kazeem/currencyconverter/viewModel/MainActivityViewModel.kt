@@ -4,11 +4,12 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.kazeem.currencyconverter.R
+import com.kazeem.currencyconverter.db.CurrencyDatabaseHelper
 import com.kazeem.currencyconverter.model.CurrencyData
 import com.mynameismidori.currencypicker.ExtendedCurrency
 import kotlinx.coroutines.*
 
-class MainActivityViewModel : ViewModel() {
+class MainActivityViewModel(currencyDb: CurrencyDatabaseHelper) : ViewModel() {
     private var viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
     val selectedBaseCurrency = mutableStateOf(CurrencyData(currency = "EUR", flag = R.drawable.euro, name = "Euro"))

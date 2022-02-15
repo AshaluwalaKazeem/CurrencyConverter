@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.kazeem.currencyconverter.db.CurrencyDatabaseBuilder
+import com.kazeem.currencyconverter.db.CurrencyDatabaseHelperImpl
 import com.kazeem.currencyconverter.ui.custom.ChartMainView
 import com.kazeem.currencyconverter.ui.custom.CurrencyInputView
 import com.kazeem.currencyconverter.ui.custom.CurrencyPickerDialog
@@ -53,7 +55,8 @@ class MainActivity : ComponentActivity() {
 
         // I will be using Jetpack Compose (Android modern toolkit for building native UI) to design the UI for this application since it simplifies and accelerates UI development on Android.
 
-        val viewModelFactory = ViewModelFactory()
+        val currencyDb = CurrencyDatabaseHelperImpl(CurrencyDatabaseBuilder.getInstance(applicationContext))
+        val viewModelFactory = ViewModelFactory(currencyDb)
         viewModel = ViewModelProvider(this, viewModelFactory).get(MainActivityViewModel::class.java)
         viewModel.getAllCurrency()
         setContent {
