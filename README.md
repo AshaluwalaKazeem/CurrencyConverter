@@ -11,5 +11,9 @@ Screenshot 1
 
 Screenshot 2
 
+![App Screenshot](https://github.com/AshaluwalaKazeem/CurrencyConverter/blob/master/Screenshot_20220215-172116.png)
+
+Screenshot 3
+
 ![App Screenshot](https://github.com/AshaluwalaKazeem/CurrencyConverter/blob/master/Screenshot_20220215-170840.png)
 
