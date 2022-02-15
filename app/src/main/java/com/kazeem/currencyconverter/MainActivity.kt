@@ -100,7 +100,7 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if(viewModel.isLoading.value) CircularProgressIndicator(
-                    strokeWidth = 1.dp
+                    strokeWidth = 3.dp
                 )
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
@@ -234,7 +234,7 @@ fun MainActivityView(viewModel: MainActivityViewModel) {
                             Text(text = "Mid-market as exchange rate at 13:38 UTC", textDecoration = TextDecoration.Underline, color = Blue500)
                         }
 
-                        ChartMainView()
+                        ChartMainView(viewModel)
                     }
                 }
             }

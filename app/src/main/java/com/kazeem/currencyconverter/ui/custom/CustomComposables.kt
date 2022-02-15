@@ -1,5 +1,6 @@
 package com.kazeem.currencyconverter.ui.custom
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -31,13 +32,23 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.core.content.ContextCompat
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
+import com.github.mikephil.charting.components.Description
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.kazeem.currencyconverter.R
+import com.kazeem.currencyconverter.databinding.LineChartLayoutBinding
 import com.kazeem.currencyconverter.model.CurrencyData
 import com.kazeem.currencyconverter.ui.theme.*
 import com.kazeem.currencyconverter.util.Utils
 import com.kazeem.currencyconverter.viewModel.MainActivityViewModel
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 // This file holds all the custom views that is needed to build the app Ui.
 
@@ -64,7 +75,11 @@ fun CurrencyInputView(
 
                 },
                 onLongClick = {
-                    if(textInput.value.isNotEmpty()) Utils.copyTextToClipboard(context = context, textInput.value, "Text copied to clipboard")
+                    if (textInput.value.isNotEmpty()) Utils.copyTextToClipboard(
+                        context = context,
+                        textInput.value,
+                        "Text copied to clipboard"
+                    )
                 }
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -186,7 +201,7 @@ fun CurrencyPickerDialog(
                             .clickable {
                                 coroutine.launch {
                                     if (selectedButton.value == 0) {
-                                        if(viewModel.selectedTargetCurrency.value.currency == currencyData.currency) {
+                                        if (viewModel.selectedTargetCurrency.value.currency == currencyData.currency) {
                                             viewModel.selectedTargetCurrency.value = CurrencyData(
                                                 currency = viewModel.selectedBaseCurrency.value.currency,
                                                 flag = viewModel.selectedBaseCurrency.value.flag,
@@ -199,7 +214,7 @@ fun CurrencyPickerDialog(
                                             name = currencyData.name
                                         )
                                     } else {
-                                        if(viewModel.selectedBaseCurrency.value.currency == currencyData.currency) {
+                                        if (viewModel.selectedBaseCurrency.value.currency == currencyData.currency) {
                                             viewModel.selectedBaseCurrency.value = CurrencyData(
                                                 currency = viewModel.selectedTargetCurrency.value.currency,
                                                 flag = viewModel.selectedTargetCurrency.value.flag,
@@ -213,7 +228,7 @@ fun CurrencyPickerDialog(
                                         )
                                     }
                                     currencyPickerSheetState.hide()
-                                    if(viewModel.baseCurrencyValue.value.matches("-?\\d+(\\.\\d+)?".toRegex())){
+                                    if (viewModel.baseCurrencyValue.value.matches("-?\\d+(\\.\\d+)?".toRegex())) {
                                         viewModel.convertCurrency(context)
                                     }
                                 }
@@ -250,7 +265,8 @@ fun CurrencyPickerDialog(
 }
 
 @Composable
-fun ChartMainView() {
+fun ChartMainView(viewModel: MainActivityViewModel) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -266,9 +282,8 @@ fun ChartMainView() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(15.dp)
-                .height(150.dp)
         ) {
-
+            MyLineChart(viewModel = viewModel, context = context)
         }
 
         TextButton(
@@ -277,5 +292,31 @@ fun ChartMainView() {
         ) {
             Text(text = "Get rate alerts straights to your email inbox", textDecoration = TextDecoration.Underline, color = Color.White)
         }
+    }
+}
+
+
+
+@Composable
+fun MyLineChart(viewModel: MainActivityViewModel, context: Context) {
+    val entries: ArrayList<Entry> = ArrayList()
+    var count: Float = -1F
+    for(data in 0..10){
+        count++
+        entries.add(BarEntry(count, floatArrayOf(data.times(Random.nextInt().toFloat()))))
+    }
+    val dataset = LineDataSet(entries, "currency")
+    val fillGradient = ContextCompat.getDrawable(context, R.drawable.line_chart_gradient)
+    dataset.setDrawFilled(true)
+    dataset.fillDrawable = fillGradient
+    val data = LineData(dataset)
+    AndroidViewBinding(LineChartLayoutBinding::inflate, modifier = Modifier.fillMaxWidth()){
+        val description = Description()
+        description.text = "Past Currency Trend"
+        lineChart.notifyDataSetChanged()
+        lineChart.setNoDataText("No chart data available.")
+        description.also { lineChart.description = it }
+        lineChart.animateXY(2000, 2000)
+        lineChart.setDrawBorders(true)
     }
 }
